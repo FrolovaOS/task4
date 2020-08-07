@@ -1,30 +1,48 @@
 package org.example;
 
 import java.sql.Timestamp;
-import org.json.JSONObject;
+import java.util.logging.Logger;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import org.apache.logging.log4j.LogManager;
 
 public class JsonParser {
 
 
-    public User getUser(String response) {
-        JSONObject userJson = new JSONObject(response);
+    public User getUser(String response)  {
+        ObjectMapper objectMapper = new ObjectMapper();
+        User  user = null;
 
-        String firstName = userJson.getString("firstName");
-        String lastName = userJson.getString("lastName");
-        int age = userJson.getInt("age");
+        try {
+            user = objectMapper.readValue(response, User.class);
+        } catch (JsonProcessingException e) {
+            Logger log = Logger.getLogger(JsonParser.class.getName());
+            log.info("Invalid data");
+            log.info(e.getMessage());
+        }
+        
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        userJson.append("handledTimestamp", timestamp.toString());
 
-        return new User( firstName,lastName,age,timestamp.toString());
+        user.setTimestamp(String.valueOf(timestamp.getTime()));
+        return  user;
     }
 
     public String getJson(User user){
-        String firstName = user.getFirstName();
-        String lastName =user.getLastName();
-        int age = user.getAge();
-        String timestamp =user.getTimestamp();
-       String message = " {\"firstName\": \""+firstName+"\", \"lastName\": \""+lastName+"\", \"age\": "+age+"\", \"timestamp\": \""+timestamp+"}";
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        String  message = null;
+        try {
+            message = objectMapper.writeValueAsString(user);
+        } catch (JsonProcessingException e) {
+            Logger log = Logger.getLogger(JsonParser.class.getName());
+            log.info("Invalid data");
+            log.info(e.getMessage());
+        }
+
         return message;
     }
 }
