@@ -2,13 +2,8 @@ package org.example;
 
 import java.sql.Timestamp;
 import java.util.logging.Logger;
-
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import org.apache.logging.log4j.LogManager;
 
 public class JsonParser {
 
@@ -24,10 +19,10 @@ public class JsonParser {
             log.info("Invalid data");
             log.info(e.getMessage());
         }
-        
+
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
-        user.setTimestamp(String.valueOf(timestamp.getTime()));
+        user.setTimestamp(timestamp.getTime());
         return  user;
     }
 

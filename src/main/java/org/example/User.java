@@ -14,6 +14,6 @@ public class User implements Serializable {
     @NonNull
     private Integer age;
 
-    private String timestamp;
+    private Long timestamp;
 
 }
