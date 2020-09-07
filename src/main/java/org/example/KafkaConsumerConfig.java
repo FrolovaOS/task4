@@ -19,8 +19,6 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 @EnableAutoConfiguration
 public class KafkaConsumerConfig {
 
-    //@Qualifier("input-topic")
-    //@Value("bean.input-topic")
 
     @Value("${input-topic}")
     private String inputTopic;
