@@ -14,15 +14,25 @@ public class JsonParser {
 
         try {
             user = objectMapper.readValue(response, User.class);
-        } catch (JsonProcessingException e) {
+            Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
+            user.setTimestamp(timestamp.getTime());
+        } catch (NullPointerException e) {
             Logger log = Logger.getLogger(JsonParser.class.getName());
             log.info("Invalid data");
             log.info(e.getMessage());
+
+        }
+        catch( JsonProcessingException u){
+            Logger log = Logger.getLogger(JsonParser.class.getName());
+            log.info("Invalid data");
+            log.info(u.getMessage());
         }
 
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
-        user.setTimestamp(timestamp.getTime());
+//        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+//
+//        user.setTimestamp(timestamp.getTime());
         return  user;
     }
 
@@ -32,10 +42,16 @@ public class JsonParser {
         String  message = null;
         try {
             message = objectMapper.writeValueAsString(user);
-        } catch (JsonProcessingException e) {
+        }catch (NullPointerException e) {
             Logger log = Logger.getLogger(JsonParser.class.getName());
             log.info("Invalid data");
             log.info(e.getMessage());
+
+        }
+        catch( JsonProcessingException u){
+            Logger log = Logger.getLogger(JsonParser.class.getName());
+            log.info("Invalid data");
+            log.info(u.getMessage());
         }
 
         return message;
