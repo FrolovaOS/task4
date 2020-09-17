@@ -12,6 +12,7 @@ import org.springframework.integration.kafka.dsl.Kafka;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.messaging.Message;
 
 @Configuration
 @EnableKafka
@@ -23,38 +24,28 @@ public class KafkaConsumerConfig {
     @Value("${input-topic}")
     private String inputTopic;
 
-    public String getInputTopic() {
-        return inputTopic;
-    }
-
-    public void setInputTopic(String inputTopic) {
-        this.inputTopic = inputTopic;
-    }
-
-    public String getOutputTopic() {
-        return outputTopic;
-    }
-
-    public void setOutputTopic(String outputTopic) {
-        this.outputTopic = outputTopic;
-    }
-
-    @Value("${output-topic}")
-    private String outputTopic;
+    @Value("${usertopic}")
+    private String usertopic;
 
     @Autowired
     private KafkaProperties properties;
+
     @Autowired
     private Service service;
+
+    @Autowired
+    private AppThread appThread;
 
 
     @Bean
     public IntegrationFlow readFromKafka() {
         return IntegrationFlows
                 .from(Kafka.messageDrivenChannelAdapter( new DefaultKafkaConsumerFactory<>(properties.buildConsumerProperties()),inputTopic))
-                .channel("fromKafka")
                 .handle(service)
-                .handle(Kafka.outboundChannelAdapter(new DefaultKafkaProducerFactory<>(properties.buildProducerProperties())).topic(outputTopic))
+                .handle(appThread)
+                //.filter(("headers'[sending]' == '1'"))
+                .filter(Message.class, m ->m.getHeaders().get("sending")=="1")
+                .handle(Kafka.outboundChannelAdapter(new DefaultKafkaProducerFactory<>(properties.buildProducerProperties())).topic(usertopic))
                 .get();
     }
 

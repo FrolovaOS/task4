@@ -4,9 +4,10 @@ import lombok.*;
 import java.io.Serializable;
 
 @Data
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 public class User implements Serializable {
 
+    private int id;
     @NonNull
     private String firstName;
     @NonNull
@@ -14,6 +15,14 @@ public class User implements Serializable {
     @NonNull
     private Integer age;
 
+    @NonNull
+    private String role;
+
     private Long timestamp;
+
+    private Integer count;
+
+    public User(){}
+
 
 }
