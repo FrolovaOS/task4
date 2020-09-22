@@ -4,7 +4,6 @@ import org.example.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.springframework.stereotype.Repository;
-
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.util.ArrayList;
@@ -15,7 +14,7 @@ import java.util.Map;
 public class UserDaoImpl extends JdbcDaoSupport implements UserDao{
 
     @Autowired
-    DataSource dataSource;
+    private DataSource dataSource;
 
     @PostConstruct
     private void initialize(){
@@ -35,12 +34,8 @@ public class UserDaoImpl extends JdbcDaoSupport implements UserDao{
 
         List<User> result = new ArrayList<User>();
         for(Map<String, Object> row:rows){
-            User user = new User();
+            User user = new User((String)row.get("firstName"),(String)row.get("lastName"),(Integer)row.get("age"),(String)row.get("role"));
             user.setId((Integer)row.get("id"));
-            user.setFirstName((String)row.get("firstName"));
-            user .setLastName((String) row.get("lastName"));
-            user.setAge((Integer)row.get("age"));
-            user.setRole((String)row.get("role"));
             result.add(user );
         }
 

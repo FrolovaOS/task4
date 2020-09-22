@@ -1,9 +1,7 @@
 package org.example;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.*;
 import org.springframework.integration.config.EnableIntegration;
 import org.springframework.integration.dsl.IntegrationFlow;
@@ -18,17 +16,11 @@ import org.springframework.messaging.Message;
 @EnableKafka
 @EnableIntegration
 @EnableAutoConfiguration
-public class KafkaConsumerConfig {
-
-
-    @Value("${input-topic}")
-    private String inputTopic;
-
-    @Value("${usertopic}")
-    private String usertopic;
+public class Router {
 
     @Autowired
-    private KafkaProperties properties;
+    ConfigProperties properties;
+
 
     @Autowired
     private Service service;
@@ -40,12 +32,11 @@ public class KafkaConsumerConfig {
     @Bean
     public IntegrationFlow readFromKafka() {
         return IntegrationFlows
-                .from(Kafka.messageDrivenChannelAdapter( new DefaultKafkaConsumerFactory<>(properties.buildConsumerProperties()),inputTopic))
+                .from(Kafka.messageDrivenChannelAdapter( new DefaultKafkaConsumerFactory<>(properties.getProperties().buildConsumerProperties()),properties.getInputtopic()))
                 .handle(service)
                 .handle(appThread)
-                //.filter(("headers'[sending]' == '1'"))
                 .filter(Message.class, m ->m.getHeaders().get("sending")=="1")
-                .handle(Kafka.outboundChannelAdapter(new DefaultKafkaProducerFactory<>(properties.buildProducerProperties())).topic(usertopic))
+                .handle(Kafka.outboundChannelAdapter(new DefaultKafkaProducerFactory<>(properties.getProperties().buildProducerProperties())).topic(properties.getUsertopic()))
                 .get();
     }
 

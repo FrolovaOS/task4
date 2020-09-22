@@ -4,7 +4,7 @@ import lombok.*;
 import java.io.Serializable;
 
 @Data
-//@RequiredArgsConstructor
+@RequiredArgsConstructor
 public class User implements Serializable {
 
     private int id;
@@ -22,7 +22,6 @@ public class User implements Serializable {
 
     private Integer count;
 
-    public User(){}
 
 
 }

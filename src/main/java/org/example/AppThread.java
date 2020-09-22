@@ -1,11 +1,7 @@
 package org.example;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
@@ -31,14 +27,20 @@ import java.util.concurrent.*;
 @EnableAutoConfiguration
 public class AppThread extends MessageProducerSupport implements MessageHandler {
 
+    private DirectChannel sendStatics;
+
     Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-    @Value("${staticstopic}")
-    private String staticstopic;
 
     private static ConcurrentMap<String,Integer> statics =new ConcurrentHashMap<>(1);
 
     @Autowired
+    private ConfigProperties properties;
+
+    @Autowired
     private ThreadPoolTaskExecutor executor;
+
+    @Autowired
+    private JsonParser jsonParser;
 
     @Bean
     public ThreadPoolTaskExecutor initExecutor(){
@@ -50,32 +52,25 @@ public class AppThread extends MessageProducerSupport implements MessageHandler 
         return executor;
     }
 
-    @Autowired
-    DirectChannel sendStatics;
+
 
     @Bean
-    public DirectChannel sendStatics(){return new DirectChannel();}
-
-
+    public void sendStatics(){ sendStatics = new DirectChannel();}
 
 
     @Scheduled(fixedDelay = 100000)
     public void showStatics(){
         executor.execute(() -> {
-            ObjectMapper objectMapper = new ObjectMapper();
+
             for(Map.Entry<String,Integer> entry : statics.entrySet())
             {
-                JsonParser user = new JsonParser();
-                User user2 =user.getUser(entry.getKey());
+                User user =jsonParser.getUser(entry.getKey());
 
-                user2.setTimestamp(timestamp.getTime());
-                user2.setCount(entry.getValue());
-                String info ="";
-                try {
-                     info = objectMapper.writeValueAsString(user2);
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                }
+                user.setTimestamp(timestamp.getTime());
+                user.setCount(entry.getValue());
+
+                String info =jsonParser.getJson(user);
+
                 Message message = MessageBuilder.withPayload(info).build();
                 sendStatics.send(message);
             }
@@ -87,20 +82,18 @@ public class AppThread extends MessageProducerSupport implements MessageHandler 
     public IntegrationFlow staticsToKafka() {
         return IntegrationFlows
                 .from(sendStatics)
-                .handle(Kafka.outboundChannelAdapter(new DefaultKafkaProducerFactory<>(properties.buildProducerProperties())).topic(staticstopic))
+                .handle(Kafka.outboundChannelAdapter(new DefaultKafkaProducerFactory<>(properties.getProperties().buildProducerProperties())).topic(properties.getStaticstopic()))
                 .get();
     }
 
-    @Autowired
-    private KafkaProperties properties;
+
 
     @Override
     public void handleMessage(Message<?> message) throws MessagingException {
-        JsonParser user = new JsonParser();
-        User user2 =user.getUser(message.getPayload().toString());
-
-        String record = user.getJson(user2);
+        User user =jsonParser.getUser(message.getPayload().toString());
+        String record = jsonParser.getJson(user);
         Integer oldValue=statics.get(record);
+
         if(oldValue!=null)
         {
             statics.replace(record,oldValue+1);
